@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"LedCube.obj" 
+TO "LedCube" 
+RAMSIZE(256) 

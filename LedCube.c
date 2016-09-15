@@ -1,6 +1,4 @@
 #include<reg51.h>
-#include<intrins.h>
-#include<stdlib.h>
 #define N 3
 
 sbit D0 = P0^0;
@@ -25,42 +23,42 @@ sbit Light_Con = P1^5;	//µÆ×Ü¿ª¹Ø
 void performance();
 void Timer0Init(void);
 void Delay1ms();
-void Delay1ms();
+void Timer1Init(void);
+void Change();
 
-unsigned char dat_P0[24] = {0};
-unsigned char InrpRand;
-unsigned int cnt;
+unsigned int dat_P0[8][3] = {
+	0xDB, 0xB6, 0x6D,	//red
+	0x49, 0x92, 0x24,	//yellow
+	0xB6, 0x6D, 0xDB, //blue
+	0x6D, 0xDB, 0xB6, //green
+	0x24, 0x49, 0x92, //cyan-blue
+	0x92, 0x24, 0x49, //purple
+	0x00, 0x00, 0x00	//white
+};
+static unsigned int cnt1 = 0, cnt = 0;
+static unsigned char n=0,m = 0;
+
 void main()	//2ms@22.1184MHz
 {
-	unsigned char i = 0;
 	Timer0Init();
+  Timer1Init();
 	EA = 1;
 	ET0 = 1;
+	ET1 = 1;
 	while(1)
 	{
 		TR0 = 1;
-		for(i=0;i<24;i++)
-		{
-			dat_P0[i] = rand() % 256;
-		}
 	}
-	
 }
 
 int interuptTimer0() interrupt 1
 {
 	static unsigned int i = 0;
+	TL0 = 0x9A;		//??????
+	TH0 = 0xA9;		//??????
 	TR0 = 0;
-	TL0 = 0xCD;		//??????
-	TH0 = 0xD4;		//??????
 	cnt++;
-	if(cnt>=8)
-	{
-		cnt = 0;
-	}
-	InrpRand = rand() % 8;
-	Light_Con = 1;
-	switch (InrpRand)
+	switch (i)
     {
 	    case 0: ADDR2=0; ADDR1=0; ADDR0=0; i++; performance(); break;
 	    case 1: ADDR2=0; ADDR1=0; ADDR0=1; i++; performance(); break;
@@ -73,38 +71,63 @@ int interuptTimer0() interrupt 1
 	    default: break;
     }
 }
+int interruptTimer1() interrupt 3
+{
+	
+	TL1 = 0x66;		//??????
+	TH1 = 0x7E;		//??????
+	cnt++;
+	if(cnt >= 1000)
+	{
+		cnt = 0;
+		m++;
+		if(m>=8)
+		{
+			m = 0;
+		}
+	}
+	
+}
 void Timer0Init(void)		//2??@22.1184MHz
 {
 	AUXR |= 0x80;		//?????1T??
 	TMOD &= 0xF0;		//???????
 	TMOD |= 0x01;		//???????
-	TL0 = 0x33;		//??????
-	TH0 = 0x53;		//??????
-	TF0 = 0;		//??TF0??
-	TR0 = 1;		//???0????
+	TL0 = 0x66;		//??????
+	TH0 = 0x7E;		//??????
+	TF0 = 0;		//??TF0??	
+}
+void Timer1Init(void)		//1??@22.1184MHz
+{
+	AUXR |= 0x40;		//?????1T??
+	TMOD &= 0x0F;		//???????
+	TMOD |= 0x10;		//???????
+	TL1 = 0x66;		//??????
+	TH1 = 0x7E;		//??????
+	TF1 = 0;		//??TF1??
+	TR1 = 1;		//???1????
 }
 void performance()
 {
-	unsigned int dat = 0x01;
 	unsigned int i;
-	unsigned char n=0;
-	bit datds0;
 	
 	for(i=0;i<24;i++)
-	{
+	{	
 		SHCP = 0;
-		STCP = 0;
-		datds0 = dat &0x01;
-		DS0 = datds0;
+		STCP = 0;		
+		DS0 = i==0?1:0;
 		SHCP = 1;
 		STCP = 1;
-		dat>>=1;
-		P0 = dat_P0[i];
-}
+		if(n >= 3)
+		{
+			n = 0;
+		}
+		P0 = dat_P0[m][n];
+		n++;
+	}
 	Light_Con = 0;
-
-	
-
+	Delay1ms();
+	Light_Con = 1;
 }
 void Delay1ms()		//@22.1184MHz
 {
@@ -117,4 +140,3 @@ void Delay1ms()		//@22.1184MHz
 		while (--j);
 	} while (--i);
 }
-
