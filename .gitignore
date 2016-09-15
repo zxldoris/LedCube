@@ -45,3 +45,14 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+*.bak
+*.M51
+*.LST
+ledcube12.lnp
+ledcube12.hex
+ledcube12.build_log.htm
+*.OBJ
+ledcube12.uvgui.zxl
+*.uvopt
+ledcube12.uvproj
+ledcube12
